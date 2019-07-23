@@ -3,15 +3,7 @@ import numpy as np
 from scipy.spatial import distance
 from skimage.feature import hog
 import scipy.interpolate as interp
-def get_distance(v1,v2):
-    
-    if(len(v1)==len(v2)):
-        dist = distance.euclidean(np.array(v1),np.array(v2))
-    else:
-        dist = -1
-    if(dist>1000):
-        dist=30
-    return dist
+
 def get_overlap_to_self(a,b):
     if(int(a.xmin)==int(b.xmin) and int(a.ymin)==int(b.ymin) and int(a.xmax)==int(b.xmax) and int(a.ymax)==int(b.ymax)):
         return 0

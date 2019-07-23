@@ -154,39 +154,19 @@ class Track(Detection):
             self.conf = np.maximum(det.conf,0.5)
         else:
             self.conf = 0
-#        if(self.method=='keypoint_flow'):
-#            self.xmin = self.pred_xmin
-#            self.ymin = self.pred_ymin
-#            self.xmax=self.pred_xmax
-#            self.ymax = self.pred_ymax
+       
         if(self.method=='keypoint_flow' or self.method=='dense_flow'):
-            #self.predict(prev_frame_gray,frame_gray)
+            
             self.xmin = det.xmin
             self.ymin = det.ymin
             self.xmax=det.xmax
             self.ymax = det.ymax
-            #self.apply_prediction(frame_gray,prev_frame_gray)
+           
         if(self.method=='kalman_acc' or self.method=='kalman_vel' ):
             self.predict(prev_frame_gray,frame_gray)
             pred = self.kalman_tracker.predict()
             self.kalman_tracker.correct(det.corners())
-#            prev_center = np.array([(self.xmax+self.xmin/2),(self.ymax+self.ymin)/2])
-#            pred_center = np.array([(self.pred_xmax+self.pred_xmin/2),(self.pred_ymax+self.pred_ymin)/2])
-#            prev_area = (self.xmax-self.xmin)*(self.ymax-self.ymin)
-#            
-#            pred_area= (self.pred_xmax-self.pred_xmin)*(self.pred_ymax-self.pred_ymin)
-#            if(prev_area==0):
-#                prev_area=pred_area
-#            
-#            self.centers.append(self.center())
-#            self.areas.append(self.area())
-#            
-#            if(len(self.centers)==6):
-#                
-#                self.offset = [(self.center()-self.centers[0])[0],(self.areas[0]/self.area()) - 1]
-#                self.centers = []
-#                self.areas = []
-            #print('offset ',self.offset)
+#           
             if(self.tracked_count>15):
                 self.xmin = self.pred_xmin
                 self.ymin = self.pred_ymin
@@ -233,18 +213,13 @@ class Track(Detection):
     def apply_prediction(self,frame_gray,prev_frame_gray):
         
         self.predict(prev_frame_gray,frame_gray)
-        #self.search_local_best_match(frame_gray)
         desc_dist = np.linalg.norm(self.hog-get_hog_descriptor(frame_gray,self.pred_xmin,self.pred_ymin,self.pred_xmax,self.pred_ymax),ord=1)
         if(desc_dist<0.15):
             self.xmin = self.pred_xmin
             self.ymin = self.pred_ymin
             self.xmax = self.pred_xmax
             self.ymax = self.pred_ymax
-#            if(desc_dist<0.7):
-#                if(self.method=='kalman_corners'):
-#                    self.kalman_tracker.correct(self.corners())
-            #print(self.track_id,' this is all good ',self.missed_count,desc_dist)
-            
+#             
         elif(desc_dist<0.2):
             self.xmin = (self.pred_xmin + self.xmin)/2
             self.ymin = (self.pred_ymin+ self.ymin)/2
@@ -261,16 +236,7 @@ class Track(Detection):
                 self.conf =-0.1
     def draw_own_mask(self,mask):
         cv.rectangle(mask, (int(self.xmin), int(self.ymin)), (int(self.xmax), int(self.ymax)), (255, 255, 255), -1)
-    def shiftFBFlow(self):
-        if(self.flow is not None):
-
-            
-            offset = np.average(np.average(self.flow[int(self.ymin):int(self.ymax),int(self.xmin):int(self.xmax)],1),0)
-            if(not math.isnan(offset[0]) and not math.isnan(offset[1])):
-                self.pred_xmin += offset[0]
-                self.pred_xmax += offset[0]
-                self.pred_ymin += offset[1]
-                self.pred_ymax += offset[1]
+    
     def shiftKeyPointsFlow(self,frame,prev_frame):
 	
         frame_grey = cv.cvtColor(frame,cv.COLOR_BGR2GRAY)
@@ -285,6 +251,8 @@ class Track(Detection):
             p1, st, err = cv.calcOpticalFlowPyrLK(prev_frame_grey, frame_grey,p0, None, **self.lk_params)
             old_box = bounding_box_naive(p0)
             new_box = bounding_box_naive(p1)
+            
+            
             self.new_box = new_box
             offset = [new_box[0]-old_box[0],new_box[1]-old_box[1]]
             
@@ -306,12 +274,6 @@ class Track(Detection):
             self.offset_tracker.correct(np.array([offset[0],scale_change],np.float32))
             self.offset[0] = offset[0]
             self.offset[1] = scale_change
-    #            pred_offset= self.offset_tracker.predict()
-    #            if(not math.isnan(pred_offset[0][0])):
-    #                self.offset[0]= pred_offset[0][0]
-    #            if(not math.isnan(pred_offset[1][0])):
-    #                self.offset[1]= pred_offset[1][0]
-            
             self.pred_xmin = new_center[0] - (new_width/2)
             self.pred_ymin=new_center[1] - (new_height/2)
             self.pred_xmax=new_center[0] + (new_width/2)
@@ -322,73 +284,7 @@ class Track(Detection):
             
         else:
             print('2.2 no points to track')
-    def shiftKeyPointsFlow_longterm(self,frame,prev_frame):
-        frame_width = frame.shape[1]
-        frame_height = frame.shape[0]
-        if(len(self.prev_points)>0 and len(self.new_points)>0):
-            old_box = bounding_box(self.prev_points)
-            new_box = bounding_box(self.new_points)
-            self.new_box = new_box
-            offset = [new_box[0]-old_box[0],new_box[1]-old_box[1]]
-            
-            new_center = self.center() +offset
-            old_width = self.xmax - self.xmin
-            old_height = self.ymax-self.ymin
-            
-            new_width = old_width * (new_box[2]/old_box[2])
-    
-            new_height = old_height * (new_box[3]/old_box[3])
-            scale_change= (old_width/new_width)*(old_height/new_height)
-            if(new_width==0 or new_width>frame_width or math.isnan(new_width)):
-                new_width=0
-            if(new_height==0 or new_height>frame_height or math.isnan(new_height)):
-                new_height=0
-            self.offset_tracker.correct(np.array([offset[0],scale_change],np.float32))
-            self.offset[0] = offset[0]
-            self.offset[1] = scale_change
-    #            pred_offset= self.offset_tracker.predict()
-    #            if(not math.isnan(pred_offset[0][0])):
-    #                self.offset[0]= pred_offset[0][0]
-    #            if(not math.isnan(pred_offset[1][0])):
-    #                self.offset[1]= pred_offset[1][0]
-            
-            self.pred_xmin = new_center[0] - (new_width/2)
-            self.pred_ymin=new_center[1] - (new_height/2)
-            self.pred_xmax=new_center[0] + (new_width/2)
-            self.pred_ymax=new_center[1]+ (new_height/2)
-
-    def shiftKeyPointsFlow_backup(self,frame,prev_frame):
-	
-        
-        frame_width = frame.shape[1]
-        frame_height = frame.shape[0]
-       
-           
-        if(len(self.prev_points)>0 and len(self.new_points)>0 and len(self.prev_points)==len(self.new_points)):
-           
-            old_bb = bounding_box(self.prev_points)
-            new_bb = bounding_box(self.new_points)
-            print('old bb is ', old_bb)
-            print('new bb is ', new_bb)
-            if(old_bb[2]<=0 or old_bb[3] <=0 or new_bb[2] <=0 or new_bb[3]<=0 ):
-                print('problem, negative width/height')
-                return
-            offset_x = new_bb[0]-old_bb[0]
-            offset_y = new_bb[1]-old_bb[1]
-            new_p = np.array(self.new_points)
-            old_p = np.array(self.prev_points)
-            
-            avg = np.average(new_p - old_p,0)
-            print('avg is ', avg)
-            offset_x = avg[0]
-            offset_Y = avg[1]
-            self.pred_xmin = self.xmin + offset_x
-            self.pred_ymin = self.ymin + offset_y
-            self.pred_xmax = self.xmax + offset_x
-            self.pred_ymax = self.ymax + offset_y
-            
-        else:
-            print(len(self.prev_points),len(self.new_points))
+   
     def predict(self,prev_frame_gray,frame_gray):
         if(self.method=='kalman_vel' or self.method=='kalman_acc'):
             pred = self.kalman_tracker.predict()

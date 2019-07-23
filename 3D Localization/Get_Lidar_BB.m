@@ -42,10 +42,10 @@ for index1=1:size(pointCloud.Location)
        
         
         points3d = [points3d; x,y,z,norm([x,y,z],2)];
-        %points3d = [points3d; x,y,z,y];
+        
    end
    end
-   cutting = 0;
+  
    
    if(size(points3d,1)<=0)
        BB_3D = [0 0;0 0;0 0; 0 0];
