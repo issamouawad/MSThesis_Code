@@ -5,17 +5,20 @@ The folder (darknet) contains the official code for YOLO written in C and CUDA a
 the suggested format of the input file can be of the form
 
 grl1/00001.jpg
+
 ....
 
 Additionally, the Make file is modified to allow for GPU inference.
 
-The weights (of the trained network on MS COCO ) can be downloaded from here
+The weights (of the trained network on MS COCO ) can be downloaded from here: 
 wget https://pjreddie.com/media/files/yolov3.weights
 
 The code is built using simply 
+
 make
 
 The following command can be used to run batch object detection
+
 ./darknet detect cfg/yolov3.cfg yolov3.weights file_list.txt -thresh .05 > output.txt
 
 ## Object Tracking
@@ -28,7 +31,7 @@ The Tracking procedure then outputs
 * A JSON file compatible with (http://cocodataset.org/#format-results). 
 
 ## 3D Localization
-3D Localization using the 3D point cloud is implemented in Matlab. The procedure is not linked directly to the tracking, but rather uses hard-coded tracks as input.
+3D Localization using the 3D point cloud is implemented in Matlab. The procedure currently is not linked directly to the tracking, but rather uses hard-coded tracks as input.
 The procedure (mainly accessible via function Get_Lidar_BB(BB_2D, InvM,pointCloud,order)) takes as inputs:
 * A 4D vector representing the boudning box (MinX,MinY,MaxX,MaxY)
 * The pseudo-inverse of the projection matrix
