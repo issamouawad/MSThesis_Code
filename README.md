@@ -34,6 +34,7 @@ The procedure (mainly accessible via function Get_Lidar_BB(BB_2D, InvM,pointClou
 * The pseudo-inverse of the projection matrix
 * The point cloud object.
 * An optional paramter representing a prior on the depth of the obstacle (default is 1 for obstacles that are considered the closest to the sensor, this might can be passed differently if a prior exists, from the image-plane for example, that obstacles are occluding each others
+
 The function returns two parameters:
 * The 3D bounding box in the form [X1 Y1; X2 Y2; X3 Y3; X4 Y4]
 * the centroid as a 3D point
