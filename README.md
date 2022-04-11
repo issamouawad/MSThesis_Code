@@ -28,7 +28,10 @@ The code uses as an input:
 * The detections file, which is the output of the object detection step.
 The Tracking procedure then outputs 
 * A video containing projecting the tracking results on the frames.
-* A JSON file compatible with (http://cocodataset.org/#format-results). 
+* A JSON file compatible with (http://cocodataset.org/#format-results).
+
+## Additional Requirements
+motmetrics, imutils
 
 ## 3D Localization
 3D Localization using the 3D point cloud is implemented in Matlab. The procedure currently is not linked directly to the tracking, but rather uses hard-coded tracks as input.
